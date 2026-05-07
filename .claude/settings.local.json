@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@14 *)",
+      "Bash(npm install *)",
+      "Bash(mv polymarket-tmp/app .)",
+      "Bash(mv polymarket-tmp/node_modules .)",
+      "Bash(mv polymarket-tmp/package.json .)",
+      "Bash(mv polymarket-tmp/package-lock.json .)",
+      "Bash(mv polymarket-tmp/next.config.mjs .)",
+      "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/lib /Users/paulsocheleau/Documents/BT4/POLYMARKET/types /Users/paulsocheleau/Documents/BT4/POLYMARKET/supabase)",
+      "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/auth/login /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/auth/register)",
+      "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/markets/\\\\[id\\\\] /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/markets/create)",
+      "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/dashboard /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/admin)",
+      "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/markets/\\\\[id\\\\] /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/bets /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/admin/distribute /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/admin/resolve)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
