@@ -9,7 +9,7 @@ export default async function MarketPage({ params }: { params: { id: string } })
 
   const [{ data: market }, { data: bets }, { data: profile }] = await Promise.all([
     supabase.from('markets').select('*').eq('id', params.id).single(),
-    supabase.from('bets').select('*').eq('market_id', params.id),
+    supabase.from('bets').select('*, users(email)').eq('market_id', params.id),
     supabase.from('users').select('*').eq('id', user.id).single(),
   ])
 
