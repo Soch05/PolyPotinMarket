@@ -6,14 +6,54 @@ import { calculateProbability } from '@/lib/utils'
 import type { Market, Bet, User } from '@/types'
 import ProbabilityChart from '@/components/ProbabilityChart'
 
+interface BetWithUser extends Bet {
+  users?: { email: string }
+}
+
 interface Props {
   market: Market
-  initialBets: Bet[]
+  initialBets: BetWithUser[]
   user: User
 }
 
+interface BetResult {
+  email: string
+  username: string
+  side: 'yes' | 'no'
+  amount: number
+  payout: number
+  net: number
+  isMe: boolean
+}
+
+function computeResults(bets: BetWithUser[], result: string, currentUserId: string): BetResult[] {
+  const winSide = result as 'yes' | 'no'
+  const totalWinning = bets.filter(b => b.side === winSide).reduce((s, b) => s + b.amount, 0)
+  const losersPool = bets.filter(b => b.side !== winSide).reduce((s, b) => s + b.amount, 0)
+
+  return bets
+    .map((b) => {
+      const won = b.side === winSide
+      const payout = won
+        ? Math.round(b.amount + (b.amount / totalWinning) * losersPool)
+        : 0
+      const net = won ? payout - b.amount : -b.amount
+      const email = b.users?.email ?? 'Anonyme'
+      return {
+        email,
+        username: email.split('@')[0],
+        side: b.side,
+        amount: b.amount,
+        payout,
+        net,
+        isMe: b.user_id === currentUserId,
+      }
+    })
+    .sort((a, b) => b.net - a.net)
+}
+
 export default function MarketDetail({ market, initialBets, user }: Props) {
-  const [bets, setBets] = useState<Bet[]>(initialBets)
+  const [bets, setBets] = useState<BetWithUser[]>(initialBets)
   const [amount, setAmount] = useState('')
   const [side, setSide] = useState<'yes' | 'no'>('yes')
   const [error, setError] = useState('')
@@ -29,7 +69,7 @@ export default function MarketDetail({ market, initialBets, user }: Props) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bets', filter: `market_id=eq.${market.id}` },
         (payload) => {
-          setBets((prev) => [...prev, payload.new as Bet])
+          setBets((prev) => [...prev, payload.new as BetWithUser])
         }
       )
       .subscribe()
@@ -74,6 +114,7 @@ export default function MarketDetail({ market, initialBets, user }: Props) {
 
   const isClosed = market.status === 'closed'
   const userBets = bets.filter((b) => b.user_id === user.id)
+  const results = isClosed && market.result ? computeResults(bets, market.result, user.id) : []
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -107,14 +148,8 @@ export default function MarketDetail({ market, initialBets, user }: Props) {
           <span className="font-medium text-red-400">No — {totalNo} tokens</span>
         </div>
         <div className="h-3 bg-gray-800 rounded-full overflow-hidden flex">
-          <div
-            className="h-full bg-green-500 transition-all duration-500"
-            style={{ width: `${probability}%` }}
-          />
-          <div
-            className="h-full bg-red-500 transition-all duration-500"
-            style={{ width: `${100 - probability}%` }}
-          />
+          <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${probability}%` }} />
+          <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${100 - probability}%` }} />
         </div>
         <div className="flex justify-between text-xs mt-2 text-gray-500">
           <span>{probability}%</span>
@@ -122,6 +157,41 @@ export default function MarketDetail({ market, initialBets, user }: Props) {
           <span>{100 - probability}%</span>
         </div>
       </div>
+
+      {/* Résultats (marché clôturé) */}
+      {isClosed && results.length > 0 && (
+        <div className="bg-gray-900 rounded-xl p-6 mb-6">
+          <h2 className="font-semibold mb-4">Résultats</h2>
+          <div className="space-y-2">
+            {results.map((r, i) => (
+              <div
+                key={i}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 ${
+                  r.isMe ? 'bg-indigo-600/10 border border-indigo-500/30' : 'bg-gray-800/50'
+                }`}
+              >
+                <div className="w-6 text-center shrink-0 text-sm text-gray-500 font-mono">{i + 1}</div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium truncate ${r.isMe ? 'text-indigo-300' : 'text-gray-200'}`}>
+                    {r.username}
+                    {r.isMe && <span className="text-xs text-indigo-400 ml-1">(moi)</span>}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {r.amount} tokens sur{' '}
+                    <span className={r.side === 'yes' ? 'text-green-400' : 'text-red-400'}>
+                      {r.side.toUpperCase()}
+                    </span>
+                    {r.net > 0 && ` → remporté ${r.payout} tokens`}
+                  </p>
+                </div>
+                <div className={`text-right shrink-0 font-bold ${r.net > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {r.net > 0 ? '+' : ''}{r.net}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Bet form */}
       {!isClosed ? (
@@ -199,7 +269,7 @@ export default function MarketDetail({ market, initialBets, user }: Props) {
         </div>
       )}
 
-      {/* User's bets */}
+      {/* Mes paris */}
       {userBets.length > 0 && (
         <div className="bg-gray-900 rounded-xl p-6">
           <h2 className="font-semibold mb-3">Mes paris</h2>
