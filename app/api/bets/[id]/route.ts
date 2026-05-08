@@ -19,23 +19,28 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     .eq('id', params.id)
     .single()
 
-  if (!bet) return NextResponse.json({ error: 'Bet not found' }, { status: 404 })
+  if (!bet) return NextResponse.json({ error: 'Pari introuvable' }, { status: 404 })
 
-  // Check the market is still open — no refund on resolved markets
   const { data: market } = await serviceClient
     .from('markets')
     .select('status')
     .eq('id', bet.market_id)
     .single()
 
-  const { error: deleteError } = await serviceClient
+  const { error: deleteError, count } = await serviceClient
     .from('bets')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('id', params.id)
 
-  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  }
 
-  // Refund tokens only if market is still open
+  if (count === 0) {
+    return NextResponse.json({ error: 'Suppression échouée — pari non trouvé en base' }, { status: 500 })
+  }
+
+  // Rembourser uniquement si le marché est encore ouvert
   if (market?.status === 'open') {
     const { data: betOwner } = await serviceClient
       .from('users')

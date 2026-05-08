@@ -13,7 +13,10 @@
       "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/markets/\\\\[id\\\\] /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/markets/create)",
       "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/dashboard /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/admin)",
       "Bash(mkdir -p /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/markets/\\\\[id\\\\] /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/bets /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/admin/distribute /Users/paulsocheleau/Documents/BT4/POLYMARKET/app/api/admin/resolve)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }
