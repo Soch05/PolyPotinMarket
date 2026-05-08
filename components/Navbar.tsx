@@ -42,6 +42,7 @@ export default function Navbar() {
               <Link href="/markets" className="text-gray-300 hover:text-white">Markets</Link>
               <Link href="/markets/create" className="text-gray-300 hover:text-white">+ Create</Link>
               <Link href="/dashboard" className="text-gray-300 hover:text-white">Dashboard</Link>
+              <Link href="/leaderboard" className="text-gray-300 hover:text-white">Classement</Link>
               {user.role === 'modo' && (
                 <Link href="/admin" className="text-yellow-400 hover:text-yellow-300">Admin</Link>
               )}
