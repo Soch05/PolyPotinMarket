@@ -14,6 +14,7 @@ export default async function HomePage() {
     .from('markets')
     .select('*')
     .eq('status', 'open')
+    .or(`hidden_user_id.is.null,hidden_user_id.neq.${user.id}`)
     .order('created_at', { ascending: false })
 
   const marketIds = (markets ?? []).map((m: Market) => m.id)
