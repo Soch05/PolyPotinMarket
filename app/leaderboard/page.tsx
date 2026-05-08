@@ -9,7 +9,7 @@ export default async function LeaderboardPage() {
 
   const { data: users } = await supabase
     .from('users')
-    .select('id, email, balance, role')
+    .select('id, email, username, balance, role')
     .order('balance', { ascending: false })
 
   const medals = ['🥇', '🥈', '🥉']
