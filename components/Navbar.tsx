@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { displayName } from '@/types'
 import type { User } from '@/types'
 
 export default function Navbar() {
@@ -14,11 +15,7 @@ export default function Navbar() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
       if (!authUser) return
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
+      const { data } = await supabase.from('users').select('*').eq('id', authUser.id).single()
       setUser(data)
     })
   }, [])
@@ -40,28 +37,27 @@ export default function Navbar() {
           {user ? (
             <>
               <Link href="/markets" className="text-gray-300 hover:text-white">Markets</Link>
-              <Link href="/markets/create" className="text-gray-300 hover:text-white">+ Create</Link>
+              <Link href="/markets/create" className="text-gray-300 hover:text-white">+ Créer</Link>
               <Link href="/dashboard" className="text-gray-300 hover:text-white">Dashboard</Link>
               <Link href="/leaderboard" className="text-gray-300 hover:text-white">Classement</Link>
               {user.role === 'modo' && (
                 <Link href="/admin" className="text-yellow-400 hover:text-yellow-300">Admin</Link>
               )}
-              <span className="text-indigo-400 font-medium">{user.balance} tokens</span>
-              <button
-                onClick={handleSignOut}
-                className="text-gray-400 hover:text-white"
-              >
-                Sign out
+              <Link href="/settings" className="text-gray-300 hover:text-white text-xs">
+                {displayName(user)} · {user.balance} tokens
+              </Link>
+              <button onClick={handleSignOut} className="text-gray-400 hover:text-white">
+                Déconnexion
               </button>
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="text-gray-300 hover:text-white">Login</Link>
+              <Link href="/auth/login" className="text-gray-300 hover:text-white">Connexion</Link>
               <Link
                 href="/auth/register"
                 className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md"
               >
-                Register
+                Inscription
               </Link>
             </>
           )}
