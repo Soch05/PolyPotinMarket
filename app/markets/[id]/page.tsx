@@ -14,6 +14,7 @@ export default async function MarketPage({ params }: { params: { id: string } })
   ])
 
   if (!market) notFound()
+  if (market.hidden_user_id === user.id) notFound()
 
   return <MarketDetail market={market} initialBets={bets ?? []} user={profile} />
 }
