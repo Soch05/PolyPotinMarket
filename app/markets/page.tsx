@@ -12,6 +12,7 @@ export default async function MarketsPage() {
   const { data: markets } = await supabase
     .from('markets')
     .select('*')
+    .or(`hidden_user_id.is.null,hidden_user_id.neq.${user.id}`)
     .order('created_at', { ascending: false })
 
   const marketIds = (markets ?? []).map((m: Market) => m.id)
