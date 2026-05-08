@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { title, description, end_date } = await req.json()
+  const { title, description, end_date, hidden_user_id } = await req.json()
 
   if (!title || !end_date) {
     return NextResponse.json({ error: 'Title and end date are required' }, { status: 400 })
@@ -32,7 +32,13 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('markets')
-    .insert({ title, description: description || null, end_date, created_by: user.id })
+    .insert({
+      title,
+      description: description || null,
+      end_date,
+      created_by: user.id,
+      hidden_user_id: hidden_user_id || null,
+    })
     .select()
     .single()
 
