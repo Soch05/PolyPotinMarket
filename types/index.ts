@@ -6,6 +6,7 @@ export type BetSide = 'yes' | 'no'
 export interface User {
   id: string
   email: string
+  username: string | null
   balance: number
   role: UserRole
 }
@@ -18,6 +19,7 @@ export interface Market {
   end_date: string
   status: MarketStatus
   result: MarketResult | null
+  hidden_user_id: string | null
   created_at: string
 }
 
@@ -38,4 +40,8 @@ export interface MarketWithStats extends Market {
 
 export interface BetWithMarket extends Bet {
   markets: Market
+}
+
+export function displayName(user: Pick<User, 'email' | 'username'>): string {
+  return user.username ?? user.email.split('@')[0]
 }
