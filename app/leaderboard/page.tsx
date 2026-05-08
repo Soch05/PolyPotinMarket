@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { displayName } from '@/types'
 
 export default async function LeaderboardPage() {
   const supabase = createServerSupabaseClient()
