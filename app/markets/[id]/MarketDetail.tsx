@@ -114,10 +114,7 @@ export default function MarketDetail({ market, initialBets, user }: Props) {
 
   const isClosed = market.status === 'closed'
   const userBets = bets.filter((b) => b.user_id === user.id)
-  const visibleBets = market.hidden_user_id
-    ? bets.filter((b) => b.user_id !== market.hidden_user_id)
-    : bets
-  const results = isClosed && market.result ? computeResults(visibleBets, market.result, user.id) : []
+  const results = isClosed && market.result ? computeResults(bets, market.result, user.id) : []
 
   return (
     <div className="max-w-2xl mx-auto">
