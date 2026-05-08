@@ -43,7 +43,7 @@ export default async function LeaderboardPage() {
 
               <div className="flex-1 min-w-0">
                 <p className={`font-medium truncate ${isMe ? 'text-indigo-300' : 'text-gray-100'}`}>
-                  {u.email.split('@')[0]}
+                  {displayName(u)}
                   {isMe && <span className="text-xs text-indigo-400 ml-2">(moi)</span>}
                 </p>
                 <p className="text-xs text-gray-500 truncate">{u.email}</p>
