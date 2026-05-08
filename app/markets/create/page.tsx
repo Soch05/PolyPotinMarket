@@ -1,7 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { displayName } from '@/types'
+
+interface UserOption {
+  id: string
+  email: string
+  username: string | null
+}
 
 export default function CreateMarketPage() {
   const [title, setTitle] = useState('')
@@ -9,16 +16,49 @@ export default function CreateMarketPage() {
   const [endDate, setEndDate] = useState('')
   const [endHour, setEndHour] = useState('23')
   const [endMinute, setEndMinute] = useState('59')
+  const [hideEnabled, setHideEnabled] = useState(false)
+  const [users, setUsers] = useState<UserOption[]>([])
+  const [search, setSearch] = useState('')
+  const [hiddenUser, setHiddenUser] = useState<UserOption | null>(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/users').then(r => r.json()).then(setUsers)
+  }, [])
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const filtered = users.filter((u) => {
+    const q = search.toLowerCase()
+    return (
+      (u.username ?? '').toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q)
+    )
+  })
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (hideEnabled && !hiddenUser) {
+      setError('Sélectionne un membre à masquer ou décoche l\'option')
+      return
+    }
+
     setLoading(true)
 
-    // Combine date + time into a full ISO string (local time)
     const endDateTime = new Date(`${endDate}T${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}:00`)
 
     if (endDateTime <= new Date()) {
@@ -30,7 +70,12 @@ export default function CreateMarketPage() {
     const res = await fetch('/api/markets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, end_date: endDateTime.toISOString() }),
+      body: JSON.stringify({
+        title,
+        description,
+        end_date: endDateTime.toISOString(),
+        hidden_user_id: hideEnabled && hiddenUser ? hiddenUser.id : null,
+      }),
     })
 
     const data = await res.json()
@@ -45,7 +90,6 @@ export default function CreateMarketPage() {
   }
 
   const today = new Date().toISOString().split('T')[0]
-
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
   const minutes = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']
 
@@ -97,9 +141,7 @@ export default function CreateMarketPage() {
                 onChange={(e) => setEndHour(e.target.value)}
                 className="bg-transparent focus:outline-none text-sm"
               >
-                {hours.map((h) => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
+                {hours.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
               <span className="text-gray-400 font-bold">:</span>
               <select
@@ -107,9 +149,7 @@ export default function CreateMarketPage() {
                 onChange={(e) => setEndMinute(e.target.value)}
                 className="bg-transparent focus:outline-none text-sm"
               >
-                {minutes.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
+                {minutes.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           </div>
@@ -120,6 +160,80 @@ export default function CreateMarketPage() {
                 weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
               })}
             </p>
+          )}
+        </div>
+
+        {/* Masquer un membre */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hideEnabled}
+              onChange={(e) => {
+                setHideEnabled(e.target.checked)
+                if (!e.target.checked) { setHiddenUser(null); setSearch('') }
+              }}
+              className="w-4 h-4 accent-indigo-500"
+            />
+            <div>
+              <p className="font-medium text-sm">Masquer un membre</p>
+              <p className="text-gray-500 text-xs mt-0.5">
+                Ce membre ne sera pas affiché dans les résultats du marché
+              </p>
+            </div>
+          </label>
+
+          {hideEnabled && (
+            <div className="mt-4 relative" ref={dropdownRef}>
+              {hiddenUser ? (
+                <div className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
+                  <div>
+                    <p className="text-sm font-medium text-indigo-300">
+                      {displayName(hiddenUser)}
+                    </p>
+                    <p className="text-xs text-gray-500">{hiddenUser.email}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setHiddenUser(null); setSearch('') }}
+                    className="text-gray-400 hover:text-white text-xs px-2 py-1 rounded hover:bg-gray-700"
+                  >
+                    Changer
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setDropdownOpen(true) }}
+                    onFocus={() => setDropdownOpen(true)}
+                    placeholder="Chercher par pseudo ou email…"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                  />
+                  {dropdownOpen && filtered.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                      {filtered.map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => { setHiddenUser(u); setDropdownOpen(false); setSearch('') }}
+                          className="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition-colors"
+                        >
+                          <p className="text-sm font-medium">{displayName(u)}</p>
+                          <p className="text-xs text-gray-400">{u.email}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {dropdownOpen && search && filtered.length === 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-gray-400">
+                      Aucun résultat
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           )}
         </div>
 
