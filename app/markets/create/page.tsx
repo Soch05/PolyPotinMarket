@@ -178,7 +178,7 @@ export default function CreateMarketPage() {
             <div>
               <p className="font-medium text-sm">Masquer un membre</p>
               <p className="text-gray-500 text-xs mt-0.5">
-                Ce membre ne sera pas affiché dans les résultats du marché
+                Ce membre ne pourra pas voir ni accéder à ce marché
               </p>
             </div>
           </label>
